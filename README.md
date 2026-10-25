@@ -41,14 +41,7 @@ Dự án tách hệ thống thành hai lớp:
 
 ### 🧭 Hành trình của khách hàng
 
-```mermaid
-flowchart LR
-    A["💬 Hỏi tư vấn<br/>trên Telegram"] --> B["✅ Xác nhận mua"]
-    B --> C["📝 Điền biểu mẫu"]
-    C --> D["📲 Quét QR<br/>thanh toán"]
-    D --> E["🔄 Đối soát<br/>tự động"]
-    E --> F["📧 Nhận sản phẩm<br/>qua email"]
-```
+![Quy trình mua hàng](demo/purchase-flow.png)
 
 - Khi khách nói muốn mua, bot chưa tạo đơn ngay mà hiện mã sản phẩm để khách **xác nhận**, tránh hiểu sai ý định hoặc chọn nhầm sản phẩm.
 - Đơn được tạo ở trạng thái `PENDING`. Khi SePay gửi webhook, hệ thống đối chiếu **mã đơn và số tiền**: khớp thì chuyển sang `PAID` và giao sản phẩm, không khớp thì giữ lại để kiểm tra.
@@ -69,17 +62,11 @@ Ba luồng n8n dùng chung dữ liệu nghiệp vụ; RAG chạy như một API 
 
 **Indexing** (offline, chạy khi tài liệu thay đổi):
 
-```mermaid
-flowchart LR
-    I1["📄 Tài liệu nội bộ"] --> I2["Loader"] --> I3["Chunking"] --> I4["Embedding"] --> I5[("Vector Database")]
-```
+![Ingestion flow](demo/ingestion.png)
 
 **Generation** (online, chạy mỗi khi khách nhắn tin):
 
-```mermaid
-flowchart LR
-    G1["💬 Query"] --> G2["Pre-retrieval"] --> G3["Retrieval"] --> G4["Post-retrieval"] --> G5["Prompt"] --> G6["Answer"]
-```
+![Generation flow](demo/generation.png)
 
 ---
 
