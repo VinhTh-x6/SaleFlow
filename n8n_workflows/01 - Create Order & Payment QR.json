@@ -1,0 +1,736 @@
+{
+  "name": "01 - Create Order & Payment QR",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1200007184,
+          "mode": "list",
+          "cachedResultName": "CUSTOMER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ $json.customer_id }}",
+            "name": "={{ $json.name }}",
+            "phone": "={{ $json.phone }}",
+            "email": "={{ $json.email }}",
+            "telegram_id": "={{ $json.telegram_id }}",
+            "created_at": "={{ $json.created_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_id",
+              "displayName": "telegram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1296,
+        -160
+      ],
+      "id": "c07bf945-10e8-4559-95e4-589e4a05b107",
+      "name": "Create Customer",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Prepare Order Data').item.json.telegram_id }}",
+        "file": "={{ $json.qr_url }}",
+        "additionalFields": {
+          "caption": "=💳 <b>Thanh toán đơn hàng</b>\n\n🧾 <b>Mã đơn:</b> <code>{{ $('Create Pending Order').item.json.order_id }}</code>\n🔖 <b>Mã sản phẩm:</b> <code>{{ $('Create Pending Order').item.json.product_id }}</code>\n💰 <b>Số tiền:</b> {{ Number($('Create Pending Order').item.json.amount).toLocaleString('vi-VN') }}đ\n\nVui lòng quét mã QR để thanh toán.\n\n<i>Sau khi giao dịch được ghi nhận, trong khoảng 15 - 20 giây hệ thống sẽ tự động đối soát và gửi tài liệu đến email bạn đã cung cấp.</i>",
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        -160
+      ],
+      "id": "4d1612a1-9b97-4358-8efe-83aa4e618332",
+      "name": "Send Payment QR",
+      "webhookId": "f1456671-cdd5-4f36-8882-04800dd58f48",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKZS4m9I4PQdn6Yz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 870700681,
+          "mode": "list",
+          "cachedResultName": "PRODUCT",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "product_id",
+              "lookupValue": "={{ $json.product_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        848,
+        -160
+      ],
+      "id": "e0ca138c-6dcc-49eb-afe2-1a874192ef19",
+      "name": "Get Product",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aafb6e36-e235-49a7-8b18-b95b3e42c363",
+              "name": "customer_id",
+              "value": "={{ 'CUS' + Date.now() }}",
+              "type": "string"
+            },
+            {
+              "id": "451140ea-5bb8-48d0-8ee1-734da80178c0",
+              "name": "order_id",
+              "value": "={{ Math.floor(Date.now() / 1000) }}",
+              "type": "string"
+            },
+            {
+              "id": "5637dded-a2da-4b43-a439-7eaabb6be114",
+              "name": "name",
+              "value": "={{ $('Order Form Trigger').item.json['Họ và tên'] }}",
+              "type": "string"
+            },
+            {
+              "id": "906e1588-8867-468f-a657-a1bc1f886494",
+              "name": "phone",
+              "value": "={{ $('Order Form Trigger').item.json['Số điện thoại'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d2d54cb2-53af-4c16-876d-e87cd1dc1ee6",
+              "name": "telegram_id",
+              "value": "={{ $('Order Form Trigger').item.json.telegram_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0247c06d-de88-47a9-9149-7385c076fe55",
+              "name": "product_id",
+              "value": "={{ $('Order Form Trigger').item.json.product_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b12b3d51-f17d-40ef-ad2c-ab8f149cce6b",
+              "name": "product_name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "466505c3-5f87-462f-9553-99a64304478c",
+              "name": "amount",
+              "value": "={{ $json.price }}",
+              "type": "number"
+            },
+            {
+              "id": "fe1832d9-531f-425a-b0e2-8b9668fdc71e",
+              "name": "status",
+              "value": "PENDING",
+              "type": "string"
+            },
+            {
+              "id": "eee9564f-875f-4988-a6b2-1f85ceaa7cf7",
+              "name": "created_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "098746bb-ea8f-4987-991a-7f9d0bc86d56",
+              "name": "email",
+              "value": "={{ $('Order Form Trigger').item.json.Email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        -160
+      ],
+      "id": "2f9d0a74-1af0-4709-a3e5-ce8a77d8961c",
+      "name": "Prepare Order Data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 286319821,
+          "mode": "list",
+          "cachedResultName": "ORDER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "created_at": "={{ $('Prepare Order Data').item.json.created_at }}",
+            "customer_id": "={{ $('Prepare Order Data').item.json.customer_id }}",
+            "order_id": "={{ $('Prepare Order Data').item.json.order_id }}",
+            "product_id": "={{ $('Prepare Order Data').item.json.product_id }}",
+            "amount": "={{ $('Prepare Order Data').item.json.amount }}",
+            "status": "={{ $('Prepare Order Data').item.json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_link_id",
+              "displayName": "payment_link_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paid_at",
+              "displayName": "paid_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        -160
+      ],
+      "id": "dca99c0b-7f8b-4311-8bf1-d14b4ee230ea",
+      "name": "Create Pending Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9f16328-4890-4e5b-9f61-de35f395973f",
+              "name": "bank_code",
+              "value": "MB",
+              "type": "string"
+            },
+            {
+              "id": "7187cb76-e5dc-4663-8285-93fd6989d1e2",
+              "name": "account_number",
+              "value": "YOUR_ACCOUNT_NUMBER",
+              "type": "string"
+            },
+            {
+              "id": "04e11ff2-428d-48b9-926e-53b1db4f002d",
+              "name": "amount",
+              "value": "={{ $('Prepare Order Data').item.json.amount }}",
+              "type": "number"
+            },
+            {
+              "id": "402a3f10-1a7e-4ef9-9637-b0665a9424f5",
+              "name": "payment_content",
+              "value": "={{ 'DH' + $('Prepare Order Data').item.json.order_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1744,
+        -160
+      ],
+      "id": "122713e3-1cb8-4e10-8282-b941740ced26",
+      "name": "Prepare Payment Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5fcf848-7afb-4997-bd05-3705d6fa7c18",
+              "name": "qr_url",
+              "value": "={{ 'https://vietqr.app/img?acc=' + $('Prepare Payment Data').item.json.account_number + '&bank=' + $('Prepare Payment Data').item.json.bank_code + '&amount=' + $('Prepare Payment Data').item.json.amount + '&des=' + encodeURIComponent($('Prepare Payment Data').item.json.payment_content) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1968,
+        -160
+      ],
+      "id": "1a92d834-005d-4ded-a815-3e5dde248516",
+      "name": "Build Payment QR URL"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 286319821,
+          "mode": "list",
+          "cachedResultName": "ORDER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('Create Pending Order').item.json.order_id }}",
+            "qr_message_id": "={{ $json.result.message_id }}"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_link_id",
+              "displayName": "payment_link_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qr_message_id",
+              "displayName": "qr_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paid_at",
+              "displayName": "paid_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        -160
+      ],
+      "id": "32c7e48a-8a00-4ca5-a63b-6d9e5a8955b1",
+      "name": "Save QR Message ID",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Thông tin đặt hàng",
+        "formDescription": "Vui lòng cung cấp một số thông tin cần thiết để hệ thống tạo đơn hàng và chuyển bạn sang bước thanh toán.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Họ và tên",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Số điện thoại"
+            },
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "product_id",
+              "fieldValue": "={{ $json.query?.product_id }}"
+            },
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "telegram_id",
+              "fieldValue": "={{ $json.query?.telegram_id }}"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        -160
+      ],
+      "id": "b84e7cf3-3f13-4a10-9cae-5d8d5bd83a12",
+      "name": "Order Form Trigger",
+      "webhookId": "YOUR_FORM_ID"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create Customer": {
+      "main": [
+        [
+          {
+            "node": "Create Pending Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Product": {
+      "main": [
+        [
+          {
+            "node": "Prepare Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Order Data": {
+      "main": [
+        [
+          {
+            "node": "Create Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Pending Order": {
+      "main": [
+        [
+          {
+            "node": "Prepare Payment Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payment Data": {
+      "main": [
+        [
+          {
+            "node": "Build Payment QR URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Payment QR URL": {
+      "main": [
+        [
+          {
+            "node": "Send Payment QR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payment QR": {
+      "main": [
+        [
+          {
+            "node": "Save QR Message ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "811817c9-3650-4261-a5c1-4d9f8bff1d4d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "nodeGroups": [],
+  "id": "vfatuOSVIWiqi8ZH",
+  "tags": []
+}

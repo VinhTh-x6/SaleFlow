@@ -1,0 +1,715 @@
+{
+  "name": "02 - SePay Webhook & Reconciliation",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const body = $('SePay Webhook').item.json.body;\n\nconst content = body.content ?? '';\nconst amount = Number(body.transferAmount ?? 0);\nconst referenceCode = body.referenceCode ?? '';\n\nconst match = content.match(/DH(\\d+)/i);\n\nif (!match) {\n  throw new Error('Không tìm thấy mã đơn dạng DH<order_id>');\n}\n\nreturn [{\n  json: {\n    order_id: match[1],\n    amount,\n    referenceCode,\n    content\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        224
+      ],
+      "id": "dd6618e3-5d91-43ef-86bc-2c31e527d2de",
+      "name": "Extract Order ID"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 286319821,
+          "mode": "list",
+          "cachedResultName": "ORDER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "order_id",
+              "lookupValue": "={{ $json.order_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        224
+      ],
+      "id": "faebf980-ef26-4670-a750-2c863b68b806",
+      "name": "Find Order",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1200007184,
+          "mode": "list",
+          "cachedResultName": "CUSTOMER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "customer_id",
+              "lookupValue": "={{ $('Find Order').item.json.customer_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        208
+      ],
+      "id": "f5622dd0-f62a-42d1-9aaf-0e0820817076",
+      "name": "Get Customer",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sepay-payment",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        240
+      ],
+      "id": "005461ff-0a05-4717-818e-baa384b27014",
+      "name": "SePay Webhook",
+      "webhookId": "83aa9417-b561-4e46-ad25-749c20cc1731"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6f562163-083d-44d6-b473-216bc96134e2",
+              "leftValue": "={{ $('SePay Webhook').item.json.body.transferType }}",
+              "rightValue": "in",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        240
+      ],
+      "id": "880ffd4c-b184-49be-957e-719706704ca7",
+      "name": "Is Incoming Transaction?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f359fec4-3994-4a07-b5a0-48b70f99dab4",
+              "leftValue": "={{ $json.amount }}",
+              "rightValue": "={{ $('Extract Order ID').item.json.amount }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        224
+      ],
+      "id": "c864c856-076f-40ea-aee3-7902c679437c",
+      "name": "Is Amount Matched?"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1902015527,
+          "mode": "list",
+          "cachedResultName": "PAYMENT",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "transaction_id",
+              "lookupValue": "={{ $('Extract Order ID').item.json.referenceCode }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        208
+      ],
+      "id": "acb314a6-7b1f-4847-b0f0-884fe535ac8a",
+      "name": "Find Payment Transaction",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1902015527,
+          "mode": "list",
+          "cachedResultName": "PAYMENT",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('Extract Order ID').item.json.order_id }}",
+            "amount": "={{ $('Extract Order ID').item.json.amount }}",
+            "transaction_id": "={{ $('Extract Order ID').item.json.referenceCode }}",
+            "payment_status": "PAID",
+            "paid_at": "={{ $('SePay Webhook').item.json.body.transactionDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_status",
+              "displayName": "payment_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paid_at",
+              "displayName": "paid_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        208
+      ],
+      "id": "709d7d3a-57b6-4956-96d9-7916c967e4f6",
+      "name": "Create Payment Record",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 286319821,
+          "mode": "list",
+          "cachedResultName": "ORDER",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('Extract Order ID').item.json.order_id }}",
+            "paid_at": "={{ $('SePay Webhook').item.json.body.transactionDate }}",
+            "status": "PAID"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_link_id",
+              "displayName": "payment_link_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paid_at",
+              "displayName": "paid_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1136,
+        208
+      ],
+      "id": "8bb8937c-7732-4bfb-a1c4-4d17de512245",
+      "name": "Mark Order as Paid",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "SalesSystem",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1642846848,
+          "mode": "list",
+          "cachedResultName": "PRODUCT_FILE",
+          "cachedResultUrl": "YOUR_SPREADSHEET_URL"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "product_id",
+              "lookupValue": "={{ $('Find Order').item.json.product_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        208
+      ],
+      "id": "e16ba102-1f3d-49fe-8744-8c865ae1d4c3",
+      "name": "Get Product Delivery",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BMDqoC5LKK5a4iPX",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get Customer').item.json.email }}",
+        "subject": "=✅ Đơn hàng #{{ $('Find Order').item.json.order_id }} đã hoàn tất",
+        "message": "=<div style=\"font-family:Arial,sans-serif;line-height:1.6;color:#222;max-width:620px;margin:auto\">\n\n  <h2 style=\"margin-bottom:8px;\">🎉 Đơn hàng của bạn đã hoàn tất</h2>\n\n  <p>Xin chào <b>{{ $('Get Customer').item.json.name }}</b>,</p>\n\n  <p>\n    Cảm ơn bạn đã hoàn tất thanh toán. Đơn hàng của bạn đã được xác nhận thành công\n    và sản phẩm hiện đã sẵn sàng để nhận hoặc truy cập.\n  </p>\n\n  <div style=\"background:#f6f7f9;padding:14px 16px;border-radius:8px;margin:18px 0;\">\n    <div>🧾 <b>Mã đơn:</b> {{ $('Find Order').item.json.order_id }}</div>\n    <div>🔖 <b>Mã sản phẩm:</b> {{ $('Find Order').item.json.product_id }}</div>\n  </div>\n\n  <p style=\"margin-bottom:10px;\"><b>📦 Sản phẩm của bạn</b></p>\n\n  <p>\n    Bạn có thể nhận hoặc truy cập sản phẩm thông qua liên kết bên dưới:\n  </p>\n\n  <p>\n    <a href=\"{{ $json.file_id }}\"\n       style=\"display:inline-block;padding:11px 18px;background:#222;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;\">\n      Truy cập sản phẩm\n    </a>\n  </p>\n\n  <div style=\"background:#f6f7f9;padding:14px 16px;border-radius:8px;margin-top:22px;\">\n    <div style=\"font-weight:bold;margin-bottom:6px;\">💬 Bộ phận hỗ trợ</div>\n\n    <div>\n      Nếu gặp vấn đề khi tải xuống, truy cập sản phẩm hoặc cần hỗ trợ về đơn hàng,\n      vui lòng liên hệ với chúng tôi:\n    </div>\n\n    <div style=\"margin-top:8px;\">\n      📧 <b>Email:</b> support@example.com<br>\n      📱 <b>Telegram:</b> @KHMT_Assistant<br>\n      ☎️ <b>Hotline:</b> 0123 456 789<br>\n      🕒 <b>Thời gian hỗ trợ:</b> 08:00 – 22:00, Thứ 2 – Thứ 7\n    </div>\n\n    <div style=\"font-size:13px;color:#666;margin-top:8px;\">\n      Khi liên hệ, vui lòng cung cấp mã đơn\n      <b>{{ $('Find Order').item.json.order_id }}</b>\n      để được hỗ trợ nhanh hơn.\n    </div>\n  </div>\n\n  <hr style=\"border:none;border-top:1px solid #e5e5e5;margin:24px 0;\">\n\n  <p style=\"margin:0;\">\n    Cảm ơn bạn đã sử dụng dịch vụ.<br>\n    <b>Trân trọng.</b>\n  </p>\n\n</div>",
+        "options": {
+          "appendAttribution": false,
+          "replyToSenderOnly": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        208
+      ],
+      "id": "eafa3d81-79c8-496b-938c-995ea3774a74",
+      "name": "Send Product Email",
+      "webhookId": "125ef7d8-bd9e-45a5-bd76-9df517cd9f91",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ATr39lN9SPY0Do3r",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get Customer').item.json.telegram_id }}",
+        "text": "=✅ <b>Đơn hàng đã hoàn tất</b>\n\n🧾 <b>Mã đơn:</b> <code>{{ $('Find Order').item.json.order_id }}</code>  \n🔖 <b>Mã sản phẩm:</b> <code>{{ $('Find Order').item.json.product_id }}</code>\n\n📧 Thông tin nhận sản phẩm đã được gửi đến email bạn cung cấp khi đặt hàng.\n\n<i>Nếu chưa thấy email, vui lòng kiểm tra thư mục Spam/Rác.</i>\n\n💬 <b>Cần hỗ trợ?</b>  \nNếu gặp vấn đề khi nhận hoặc truy cập sản phẩm, vui lòng liên hệ:\n\n📧 <b>Email:</b> support@example.com  \n📱 <b>Telegram:</b> @KHMT_Assistant  \n☎️ <b>Hotline:</b> 0123 456 789\n🕒 <b>Thời gian hỗ trợ:</b> 08:00 – 22:00, Thứ 2 – Thứ 7\n\n<i>Khi liên hệ, vui lòng gửi kèm mã đơn để được hỗ trợ nhanh hơn.</i>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        208
+      ],
+      "id": "d5cdaa25-1885-4925-a8ce-856b0d9689a7",
+      "name": "Send Payment Confirmation",
+      "webhookId": "68761340-af16-4593-b4cb-f358b9b65429",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKZS4m9I4PQdn6Yz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "={{ $('Get Customer').item.json.telegram_id }}",
+        "messageId": "={{ $('Find Order').item.json.qr_message_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        208
+      ],
+      "id": "e7b0386c-f7b3-4720-bb9b-4e078c0945ad",
+      "name": "Delete Payment QR",
+      "webhookId": "6104d576-17a4-4c9c-b539-4ebfc80ce508",
+      "credentials": {
+        "telegramApi": {
+          "id": "vKZS4m9I4PQdn6Yz",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Order ID": {
+      "main": [
+        [
+          {
+            "node": "Find Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Order": {
+      "main": [
+        [
+          {
+            "node": "Is Amount Matched?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customer": {
+      "main": [
+        [
+          {
+            "node": "Get Product Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SePay Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Incoming Transaction?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Incoming Transaction?": {
+      "main": [
+        [
+          {
+            "node": "Extract Order ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Amount Matched?": {
+      "main": [
+        [
+          {
+            "node": "Find Payment Transaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Payment Transaction": {
+      "main": [
+        [
+          {
+            "node": "Create Payment Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Payment Record": {
+      "main": [
+        [
+          {
+            "node": "Mark Order as Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Order as Paid": {
+      "main": [
+        [
+          {
+            "node": "Get Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Product Delivery": {
+      "main": [
+        [
+          {
+            "node": "Send Product Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Product Email": {
+      "main": [
+        [
+          {
+            "node": "Delete Payment QR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Payment QR": {
+      "main": [
+        [
+          {
+            "node": "Send Payment Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8c68ee4d-9577-4ffc-9a38-541589239a01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "nodeGroups": [],
+  "id": "5o7ybZtgndub087I",
+  "tags": []
+}
