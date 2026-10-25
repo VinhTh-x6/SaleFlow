@@ -1,0 +1,24 @@
+# Moi truong ao Python
+.venv/
+
+# Khoa API va bien moi truong
+.env
+*.env
+!.env.example
+
+# Du lieu Vector Store ChromaDB
+storage/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Ket qua danh gia RAG sinh ra trong data/eval
+data/eval/eval_results.csv
+data/eval/eval_results.json
+
+# File log phat sinh
+*.log
+
+# Cau hinh IDE ca nhan
+.vscode/

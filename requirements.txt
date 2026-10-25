@@ -1,0 +1,35 @@
+python-dotenv>=1.0.1
+PyYAML>=6.0.2
+
+# LangChain
+langchain-core>=0.3.0,<0.4.0
+langchain-text-splitters>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-experimental>=0.3.0,<0.4.0
+
+# Data & Numerical
+numpy<2.0.0
+pandas>=2.0.0
+
+# Document Loader
+docling>=2.0.0
+
+# Chunking & Retrieval
+sentence-transformers>=3.0.0
+rank-bm25>=0.2.2
+tiktoken>=0.8.0
+
+# Embedding & Generation (OpenAI)
+openai>=1.68.2
+langchain-openai>=0.3.0
+
+# Vector Database (ChromaDB)
+chromadb>=0.5.0
+langchain-chroma>=0.1.4
+
+# API Server
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# RAG Evaluation & Testset Generation
+ragas>=0.4.0
