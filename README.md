@@ -28,7 +28,7 @@
 
 ## 📖 Giới Thiệu
 
-Bán hàng online thường gặp hai vấn đề: chatbot thuần LLM có thể tự bịa giá hoặc nội dung sản phẩm, và các khâu tạo đơn, kiểm tra sao kê, giao hàng bị làm tay rời rạc nên hay xảy ra tình trạng tiền đã về nhưng đơn chưa được cập nhật.
+Bán hàng online (với các sản phẩm trả trước nhận sau) thường gặp hai vấn đề: chatbot thuần LLM có thể tự bịa giá hoặc nội dung sản phẩm, và các khâu tạo đơn, kiểm tra sao kê, giao hàng bị làm tay rời rạc nên hay xảy ra tình trạng tiền đã về nhưng đơn chưa được cập nhật.
 
 Dự án tách hệ thống thành hai lớp:
 
@@ -83,26 +83,6 @@ flowchart LR
 
 ---
 
-## 🧰 Công Nghệ Sử Dụng
-
-| Thành phần | Công nghệ | Vai trò |
-| :--- | :--- | :--- |
-| **LLM** | `OpenAI GPT-4.1-mini` | Trả lời tư vấn, nhận diện ý định mua và mã sản phẩm (JSON Schema) |
-| **Embedding Model** | `text-embedding-3-small` | Chuyển văn bản thành vector |
-| **Document Loader** | `Docling` | Đọc PDF, giữ nguyên bảng và heading dưới dạng Markdown |
-| **Vector Database** | `ChromaDB` | Lưu vector, tìm kiếm theo ngữ nghĩa (Dense) |
-| **Sparse Retrieval** | `Rank-BM25` | Khớp chính xác mã sản phẩm, con số (Sparse) |
-| **Reranker** | `BAAI/bge-reranker-v2-m3` | Cross-encoder sắp xếp lại các đoạn truy xuất |
-| **Backend API** | `FastAPI`, `Uvicorn` | REST API cho n8n gọi, hỗ trợ streaming |
-| **Evaluation** | `Ragas` | Đo chất lượng câu trả lời và truy xuất |
-| **Workflow Automation** | `n8n` | Điều phối toàn bộ các workflow |
-| **Payment** | `SePay` (VietQR) | Sinh mã VietQR, báo giao dịch qua webhook |
-| **Business Database** | `Google Sheets` | Lưu `PRODUCT`, `CUSTOMER`, `ORDER`, `PAYMENT`, `PRODUCT_FILE` |
-
-> Dữ liệu RAG là 12 file PDF mô phỏng (chính sách, danh mục và tài liệu từng sản phẩm). `product_id` là mã chung giữa dữ liệu RAG và Google Sheets.
-
----
-
 ## ⚙️ Cài Đặt & Sử Dụng
 
 **Bước 1: Cài đặt môi trường** (Python 3.10+)
@@ -140,10 +120,10 @@ API chạy tại `http://localhost:8000`, Swagger UI tại `http://localhost:800
 
 **Bước 5: Cài đặt n8n**
 
-1. Chạy n8n (tự host), import các file trong `n8n_workflows/`.
+1. Chạy n8n, mở `n8n_workflows/` ở dự án và import 3 file luồng lên n8n cùng với đó import 1 file .xlsx lên Google Sheets.
 2. Tạo credential cho Telegram Bot, Google Sheets, SePay và dịch vụ gửi email.
 3. Trỏ node gọi RAG tới địa chỉ API ở bước 4.
-4. Cấu hình webhook SePay trỏ về endpoint của Workflow 02, tiền tố mã thanh toán trùng với mã đơn (ví dụ `DH`).
+4. Cấu hình webhook SePay trỏ về endpoint của Workflow 02.
 
 **Bước 6: Chạy thử**
 
@@ -229,9 +209,10 @@ Câu trả lời bám tài liệu tốt, nhưng Answer Relevancy còn thấp dù
 
 - Chưa kiểm thử tải.
 - Google Sheets chỉ phù hợp giai đoạn demo.
-- Chỉ hỗ trợ Telegram, chỉ xử lý văn bản.
+- Chỉ xử lý văn bản, chỉ hỗ trợ mua 1 sản phẩm trong 1 phiên mà không hỗ trợ mua cộng dồn.
 - Dữ liệu RAG là dữ liệu mô phỏng.
 - Hoàn tiền, lỗi giao hàng, tranh chấp xử lý thủ công.
+- Spam đơn hàng mà không thanh toán.
 
 </td>
 <td width="50%" valign="top">
@@ -242,6 +223,8 @@ Câu trả lời bám tài liệu tốt, nhưng Answer Relevancy còn thấp dù
 - Thêm kênh tương tác, phương thức thanh toán.
 - Tối ưu Retrieval, Session Memory, Cache.
 - Bổ sung Monitoring, Backup, bảo mật API.
+- Tăng số lượng đơn hàng bán ra trong 1 phiên.
+- Xử lý các trường hợp spam đơn hàng, xoá những đơn `PENDING` đã tồn đọng lâu.
 
 </td>
 </tr>
